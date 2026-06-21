@@ -7,18 +7,20 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .header { background-color: #0056b3; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; color: #333; }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85em; }
+        .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 950px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        th { background-color: #f8f9fa; color: #333; font-size: 0.9em; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8em; display: inline-block; width: 80px; text-align: center; }
         .status-running { background-color: #d4edda; color: #155724; }
         .status-frozen { background-color: #f8d7da; color: #721c24; }
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; font-size: 0.85em; width: 100%; margin-bottom: 5px; }
         .btn-freeze { background-color: #dc3545; }
         .btn-freeze:hover { background-color: #c82333; }
         .btn-resume { background-color: #28a745; display: none; }
         .btn-resume:hover { background-color: #218838; }
+        .form-input { padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; background-color: #fff; }
+        .form-input:disabled { background-color: #e9ecef; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -30,29 +32,39 @@
 
     <div class="container">
         <h3>Service Administration - Disbursement Bucket</h3>
-        <p>Simulasi Fitur <b>SLA Freeze Toggle</b> untuk intervensi BMH/Stopper.</p>
+        <p>Simulasi Fitur <b>SLA Freeze Toggle</b> terintegrasi dengan <b>Audit Trail Validasi Sistem</b>.</p>
         
         <table>
             <thead>
                 <tr>
                     <th>No. Aplikasi</th>
+                    <th>Tgl Invoice Masuk</th>
                     <th>Nama Nasabah</th>
-                    <th>Posisi Bucket</th>
                     <th>Status SLA</th>
-                    <th>Argo SLA</th>
-                    <th>Action (Otorisasi Khusus)</th>
+                    <th>Argo</th>
+                    <th style="width: 25%;">Input Intervensi (Kategori & Detail)</th>
+                    <th style="width: 12%;">Action Panel</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>APP-2615900</td>
-                    <td>Bpk. Johan</td>
-                    <td>Validating</td>
+                    <td>APP-2618200</td>
+                    <td>29-Apr-2026</td>
+                    <td>Asrida Dahriani</td>
                     <td><span id="badge1" class="status-badge status-running">▶ RUNNING</span></td>
-                    <td><b id="timer1">1 Hari</b></td>
+                    <td><b id="timer1">2 Hari</b></td>
                     <td>
-                        <button id="btn-freeze-1" class="btn btn-freeze" onclick="toggleSla(1, 'freeze')">⏸ Tahan Valid (Freeze)</button>
-                        <button id="btn-resume-1" class="btn btn-resume" onclick="toggleSla(1, 'resume')">▶ Lepas Tahan (Resume)</button>
+                        <select id="kategori-1" class="form-input">
+                            <option value="">-- Pilih Kategori Freeze --</option>
+                            <option value="Tahan Valid BMH">Tahan Valid BMH</option>
+                            <option value="Stopper Sistem">Stopper Sistem / IT</option>
+                            <option value="Sales Problem">Sales Problem (Diskon/Asuransi)</option>
+                        </select>
+                        <input type="text" id="detail-1" class="form-input" placeholder="Ketik detail spesifik alasan...">
+                    </td>
+                    <td>
+                        <button id="btn-freeze-1" class="btn btn-freeze" onclick="toggleSla(1, 'freeze')">⏸ Freeze SLA</button>
+                        <button id="btn-resume-1" class="btn btn-resume" onclick="toggleSla(1, 'resume')">▶ Resume</button>
                     </td>
                 </tr>
             </tbody>
@@ -61,22 +73,44 @@
 
     <script>
         function toggleSla(id, action) {
-            const badge = document.getElementById('badge1');
-            const btnFreeze = document.getElementById('btn-freeze-1');
-            const btnResume = document.getElementById('btn-resume-1');
+            const badge = document.getElementById('badge' + id);
+            const btnFreeze = document.getElementById('btn-freeze-' + id);
+            const btnResume = document.getElementById('btn-resume-' + id);
+            const katInput = document.getElementById('kategori-' + id);
+            const detInput = document.getElementById('detail-' + id);
 
             if (action === 'freeze') {
+                // LOGIKA VALIDASI: Cegah freeze jika alasan kosong
+                if (katInput.value === "" || detInput.value.trim() === "") {
+                    alert("🚨 SISTEM MENOLAK!\n\nKategori dan Detail Alasan WAJIB DIISI sebelum menjeda SLA. Ini untuk memastikan jejak audit (audit trail) terekam dengan jelas bagi FAD HO.");
+                    return; // Menghentikan proses
+                }
+
+                // Jika terisi, Eksekusi Freeze
                 badge.className = 'status-badge status-frozen';
                 badge.innerText = '⏸ FROZEN';
                 btnFreeze.style.display = 'none';
-                btnResume.style.display = 'inline-block';
-                alert('INSTRUKSI SISTEM: SLA untuk APP-2615900 telah di-Freeze (Argo Dijeda).');
+                btnResume.style.display = 'block';
+                
+                // Kunci inputan agar tidak bisa diubah selama masa freeze
+                katInput.disabled = true;
+                detInput.disabled = true;
+
+                alert(`✅ SLA BERHASIL DIJEDA!\n\nKategori: ${katInput.value}\nDetail: ${detInput.value}\n\nArgo waktu SLA telah berhenti menghitung di database.`);
             } else {
+                // Eksekusi Resume
                 badge.className = 'status-badge status-running';
                 badge.innerText = '▶ RUNNING';
-                btnFreeze.style.display = 'inline-block';
+                btnFreeze.style.display = 'block';
                 btnResume.style.display = 'none';
-                alert('INSTRUKSI SISTEM: Aplikasi di-Release. SLA kembali berjalan.');
+                
+                // Buka kembali kunci inputan dan reset
+                katInput.disabled = false;
+                detInput.disabled = false;
+                katInput.value = "";
+                detInput.value = "";
+
+                alert('▶ SLA DILANJUTKAN!\n\nStatus Freeze telah dicabut. Aplikasi kembali masuk ke perhitungan normal SLA berjalan.');
             }
         }
     </script>
