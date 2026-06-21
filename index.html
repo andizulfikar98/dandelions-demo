@@ -8,7 +8,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .header { background-color: #0056b3; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 950px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 1050px; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f8f9fa; color: #333; font-size: 0.9em; }
         .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8em; display: inline-block; width: 80px; text-align: center; }
@@ -21,6 +21,9 @@
         .btn-resume:hover { background-color: #218838; }
         .form-input { padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; background-color: #fff; }
         .form-input:disabled { background-color: #e9ecef; cursor: not-allowed; }
+        .file-upload-wrapper { background-color: #f1f3f5; padding: 8px; border-radius: 4px; border: 1px dashed #adb5bd; margin-bottom: 8px; }
+        .file-upload-label { font-size: 0.75em; font-weight: bold; color: #495057; display: block; margin-bottom: 4px; }
+        .text-optional { color: #6c757d; font-style: italic; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -32,17 +35,17 @@
 
     <div class="container">
         <h3>Service Administration - Disbursement Bucket</h3>
-        <p>Simulasi Fitur <b>SLA Freeze Toggle</b> terintegrasi dengan <b>Audit Trail Validasi Sistem</b>.</p>
+        <p>Simulasi Fitur <b>SLA Freeze Toggle</b> terintegrasi dengan <b>Audit Trail</b>.</p>
         
         <table>
             <thead>
                 <tr>
                     <th>No. Aplikasi</th>
-                    <th>Tgl Invoice Masuk</th>
+                    <th>Tgl Invoice</th>
                     <th>Nama Nasabah</th>
                     <th>Status SLA</th>
                     <th>Argo</th>
-                    <th style="width: 25%;">Input Intervensi (Kategori & Detail)</th>
+                    <th style="width: 28%;">Form Intervensi & Bukti (Audit Trail)</th>
                     <th style="width: 12%;">Action Panel</th>
                 </tr>
             </thead>
@@ -55,12 +58,17 @@
                     <td><b id="timer1">2 Hari</b></td>
                     <td>
                         <select id="kategori-1" class="form-input">
-                            <option value="">-- Pilih Kategori Freeze --</option>
+                            <option value="">-- Pilih Kategori Freeze -- (Wajib)</option>
                             <option value="Tahan Valid BMH">Tahan Valid BMH</option>
                             <option value="Stopper Sistem">Stopper Sistem / IT</option>
                             <option value="Sales Problem">Sales Problem (Diskon/Asuransi)</option>
                         </select>
-                        <input type="text" id="detail-1" class="form-input" placeholder="Ketik detail spesifik alasan...">
+                        <input type="text" id="detail-1" class="form-input" placeholder="Ketik detail spesifik alasan... (Wajib)">
+                        
+                        <div class="file-upload-wrapper">
+                            <span class="file-upload-label">📎 Upload Bukti (Screenshot/Email) <span class="text-optional">- Opsional</span>:</span>
+                            <input type="file" id="file-1" class="form-input" accept=".jpg,.png,.pdf" style="margin-bottom: 0; padding: 4px;">
+                        </div>
                     </td>
                     <td>
                         <button id="btn-freeze-1" class="btn btn-freeze" onclick="toggleSla(1, 'freeze')">⏸ Freeze SLA</button>
@@ -78,25 +86,33 @@
             const btnResume = document.getElementById('btn-resume-' + id);
             const katInput = document.getElementById('kategori-' + id);
             const detInput = document.getElementById('detail-' + id);
+            const fileInput = document.getElementById('file-' + id);
 
             if (action === 'freeze') {
-                // LOGIKA VALIDASI: Cegah freeze jika alasan kosong
+                // LOGIKA VALIDASI: Cek Kategori & Detail SAJA (File Upload Opsional)
                 if (katInput.value === "" || detInput.value.trim() === "") {
-                    alert("🚨 SISTEM MENOLAK!\n\nKategori dan Detail Alasan WAJIB DIISI sebelum menjeda SLA. Ini untuk memastikan jejak audit (audit trail) terekam dengan jelas bagi FAD HO.");
+                    alert("🚨 SISTEM MENOLAK!\n\nAnda WAJIB mengisi:\n1. Kategori Freeze\n2. Detail Alasan\n\n(Catatan: Upload Bukti bersifat opsional, namun kejelasan alasan wajib diisi untuk Audit Trail FAD HO).");
                     return; // Menghentikan proses
                 }
 
-                // Jika terisi, Eksekusi Freeze
+                // Cek apakah user mengupload file atau tidak
+                let fileStatus = "Tidak ada file lampiran (Opsional)";
+                if (fileInput.files.length > 0) {
+                    fileStatus = `[${fileInput.files[0].name}] terlampir`;
+                }
+
+                // Eksekusi Freeze
                 badge.className = 'status-badge status-frozen';
                 badge.innerText = '⏸ FROZEN';
                 btnFreeze.style.display = 'none';
                 btnResume.style.display = 'block';
                 
-                // Kunci inputan agar tidak bisa diubah selama masa freeze
+                // Kunci semua inputan agar tidak dimanipulasi
                 katInput.disabled = true;
                 detInput.disabled = true;
+                fileInput.disabled = true;
 
-                alert(`✅ SLA BERHASIL DIJEDA!\n\nKategori: ${katInput.value}\nDetail: ${detInput.value}\n\nArgo waktu SLA telah berhenti menghitung di database.`);
+                alert(`✅ SLA BERHASIL DIJEDA!\n\nKategori: ${katInput.value}\nDetail: ${detInput.value}\nDokumen Bukti: ${fileStatus}\n\nArgo waktu SLA telah berhenti menghitung di database.`);
             } else {
                 // Eksekusi Resume
                 badge.className = 'status-badge status-running';
@@ -104,11 +120,14 @@
                 btnFreeze.style.display = 'block';
                 btnResume.style.display = 'none';
                 
-                // Buka kembali kunci inputan dan reset
+                // Buka kembali kunci inputan dan reset form
                 katInput.disabled = false;
                 detInput.disabled = false;
+                fileInput.disabled = false;
+                
                 katInput.value = "";
                 detInput.value = "";
+                fileInput.value = ""; // Kosongkan file
 
                 alert('▶ SLA DILANJUTKAN!\n\nStatus Freeze telah dicabut. Aplikasi kembali masuk ke perhitungan normal SLA berjalan.');
             }
