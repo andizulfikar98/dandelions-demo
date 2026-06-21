@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dandelions Web - SLA Automation Demo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { background-color: #0056b3; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #333; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85em; }
+        .status-running { background-color: #d4edda; color: #155724; }
+        .status-frozen { background-color: #f8d7da; color: #721c24; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-freeze { background-color: #dc3545; }
+        .btn-freeze:hover { background-color: #c82333; }
+        .btn-resume { background-color: #28a745; display: none; }
+        .btn-resume:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🍁 DANDELIONS (KAIZEN DEMO)</h2>
+        <span>User: Andi (Service Head) | Branch: Bogor</span>
+    </div>
+
+    <div class="container">
+        <h3>Service Administration - Disbursement Bucket</h3>
+        <p>Simulasi Fitur <b>SLA Freeze Toggle</b> untuk intervensi BMH/Stopper.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>No. Aplikasi</th>
+                    <th>Nama Nasabah</th>
+                    <th>Posisi Bucket</th>
+                    <th>Status SLA</th>
+                    <th>Argo SLA</th>
+                    <th>Action (Otorisasi Khusus)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>APP-2615900</td>
+                    <td>Bpk. Johan</td>
+                    <td>Validating</td>
+                    <td><span id="badge1" class="status-badge status-running">▶ RUNNING</span></td>
+                    <td><b id="timer1">1 Hari</b></td>
+                    <td>
+                        <button id="btn-freeze-1" class="btn btn-freeze" onclick="toggleSla(1, 'freeze')">⏸ Tahan Valid (Freeze)</button>
+                        <button id="btn-resume-1" class="btn btn-resume" onclick="toggleSla(1, 'resume')">▶ Lepas Tahan (Resume)</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function toggleSla(id, action) {
+            const badge = document.getElementById('badge1');
+            const btnFreeze = document.getElementById('btn-freeze-1');
+            const btnResume = document.getElementById('btn-resume-1');
+
+            if (action === 'freeze') {
+                badge.className = 'status-badge status-frozen';
+                badge.innerText = '⏸ FROZEN';
+                btnFreeze.style.display = 'none';
+                btnResume.style.display = 'inline-block';
+                alert('INSTRUKSI SISTEM: SLA untuk APP-2615900 telah di-Freeze (Argo Dijeda).');
+            } else {
+                badge.className = 'status-badge status-running';
+                badge.innerText = '▶ RUNNING';
+                btnFreeze.style.display = 'inline-block';
+                btnResume.style.display = 'none';
+                alert('INSTRUKSI SISTEM: Aplikasi di-Release. SLA kembali berjalan.');
+            }
+        }
+    </script>
+</body>
+</html>
